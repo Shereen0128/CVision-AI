@@ -130,7 +130,7 @@ if (analyzeBtn) {
         try {
 
             const response = await fetch(
-                "http://localhost:5000/api/upload",
+                "https://cvision-ai-eisc.onrender.com/api/upload",
                 {
                     method: "POST",
                     body: formData,
