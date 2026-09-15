@@ -130,7 +130,7 @@ if (analyzeBtn) {
         try {
 
             const response = await fetch(
-                "https://cvision-ai-eisc.onrender.com/api/dashboard",
+                "https://cvision-ai-eisc.onrender.com/api/upload",
                 {
                     method: "POST",
                     body: formData,
@@ -250,7 +250,7 @@ if (dashboardPage) {
             try {
 
                 const response = await fetch(
-                    "http://localhost:5000/api/dashboard"
+                    "https://cvision-ai-eisc.onrender.com/api/dashboard"
                 );
 
                 const data =
