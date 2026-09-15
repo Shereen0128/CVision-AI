@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Upload Resume | CVision AI</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="logo">CVision AI</div>
+
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="index.html#features">Features</a>
+        </div>
+
+        <a href="index.html" class="nav-button">Back Home</a>
+    </nav>
+
+
+    <!-- Upload Section -->
+    <section class="upload-section">
+
+        <div class="upload-header">
+
+            <span class="badge">AI Resume Analyzer</span>
+
+            <h1>Upload Your Resume</h1>
+
+            <p>
+                Upload your resume and let CVision AI analyze
+                your skills, ATS score, job match, and improvement areas.
+            </p>
+
+        </div>
+
+
+        <!-- Upload Box -->
+        <div class="upload-box">
+
+            <div class="upload-icon">📄</div>
+
+            <h2>Upload Your Resume</h2>
+
+            <p>
+                Choose a PDF resume to begin your analysis.
+            </p>
+
+
+            <!-- Resume File -->
+            <input
+                type="file"
+                id="resumeFile"
+                accept=".pdf"
+                hidden
+            >
+
+            <label for="resumeFile" class="primary-btn">
+                Choose Resume
+            </label>
+
+
+            <!-- Selected File -->
+            <p id="fileStatus"></p>
+
+
+            <!-- Job Role -->
+            <label for="jobRole" class="form-label">
+                Target Job Role
+            </label>
+
+            <select id="jobRole">
+                <option value="DevOps">DevOps Engineer</option>
+                <option value="Python">Python Developer</option>
+                <option value="MERN">MERN Developer</option>
+                <option value="AIML">AI/ML Engineer</option>
+            </select>
+
+
+            <!-- File Information -->
+            <small id="fileInfo">
+                PDF only • Maximum 5MB
+            </small>
+
+
+            <!-- Analyze Button -->
+            <button
+                id="analyzeBtn"
+                class="primary-btn"
+                type="button"
+            >
+                Analyze Resume
+            </button>
+
+
+            <!-- Result / Error -->
+            <p id="uploadResult"></p>
+
+        </div>
+
+    </section>
+
+
+    <script src="js/script.js"></script>
+
+</body>
+</html>

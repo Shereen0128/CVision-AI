@@ -1,0 +1,13 @@
+services:
+
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+
+    container_name: cvision-ai
+
+    ports:
+      - "5000:5000"
+
+    restart: unless-stopped

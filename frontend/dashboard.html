@@ -1,0 +1,126 @@
+﻿```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Dashboard | CVision AI</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body id="dashboardRoot">
+
+    <!-- Navigation -->
+    <nav>
+        <div class="logo">CVision AI</div>
+
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="upload.html">Upload</a>
+        </div>
+
+        <a href="upload.html" class="nav-button">
+            Upload New Resume
+        </a>
+    </nav>
+
+
+    <!-- Dashboard Header -->
+    <section class="dashboard">
+
+        <div class="section-heading">
+
+            <span class="badge">
+                Resume Analysis
+            </span>
+
+            <h2>Your Resume Insights</h2>
+
+            <p id="resumeName">
+                Resume Analysis
+            </p>
+
+        </div>
+
+
+        <!-- Main Stats -->
+        <div class="stats-grid">
+
+            <div class="feature-card">
+                <h3>ATS Score</h3>
+                <p id="atsScore">0 / 100</p>
+            </div>
+
+
+            <div class="feature-card">
+                <h3>Job Match</h3>
+                <p id="jobMatch">0%</p>
+            </div>
+
+
+            <div class="feature-card">
+                <h3>Skills Found</h3>
+                <p id="skillCount">0 Skills</p>
+            </div>
+
+
+            <div class="feature-card">
+                <h3>Pages</h3>
+                <p id="pageCount">--</p>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- Dashboard Details -->
+    <section class="dashboard-details">
+
+        <!-- Skills -->
+        <div class="feature-card">
+
+            <h3>Skills Found</h3>
+
+            <ul id="skillsList">
+                <li>Analyzing resume...</li>
+            </ul>
+
+        </div>
+
+
+        <!-- Missing Skills -->
+        <div class="feature-card">
+
+            <h3>Missing Skills</h3>
+
+            <ul id="missingSkillsList">
+                <li>Analyzing resume...</li>
+            </ul>
+
+        </div>
+
+
+        <!-- AI Suggestions -->
+        <div class="feature-card">
+
+            <h3>AI Suggestions</h3>
+
+            <ul id="suggestionsList">
+                <li>Analyzing resume...</li>
+            </ul>
+
+        </div>
+
+    </section>
+
+
+    <script src="js/script.js"></script>
+
+</body>
+
+</html>
+```
