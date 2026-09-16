@@ -1,0 +1,4 @@
+
+backend/.env.local
+backend/__pycache__/
+backend/backend/uploads/

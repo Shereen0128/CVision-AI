@@ -1,567 +1,213 @@
-const uploadPage = document.getElementById("resumeFile");
-const analyzeBtn = document.getElementById("analyzeBtn");
-const uploadResult = document.getElementById("uploadResult");
+const API_BASE_URL = "http://127.0.0.1:5000";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+function getElement(id) {
+    return document.getElementById(id);
+}
 
+function setText(id, value, fallback = "—") {
+    const element = getElement(id);
+    if (!element) return;
 
-// ===============================
-// Resume File Selection
-// ===============================
+    element.textContent =
+        value !== undefined && value !== null && value !== ""
+            ? value
+            : fallback;
+}
 
-if (uploadPage) {
+function renderList(id, items, emptyMessage = "None found") {
+    const element = getElement(id);
+    if (!element) return;
 
-    uploadPage.addEventListener("change", function (event) {
+    element.innerHTML = "";
 
-        const file = event.target.files[0];
-        const fileInfo = document.getElementById("fileInfo");
-        const fileStatus = document.getElementById("fileStatus");
+    if (!Array.isArray(items) || items.length === 0) {
+        const li = document.createElement("li");
+        li.textContent = emptyMessage;
+        element.appendChild(li);
+        return;
+    }
 
-        if (!file) {
-            return;
+    items.forEach(item => {
+        const li = document.createElement("li");
+
+        if (typeof item === "string") {
+            li.textContent = item;
+        } else {
+            li.textContent =
+                item.name ||
+                item.title ||
+                item.role ||
+                item.skill ||
+                JSON.stringify(item);
         }
 
-        // PDF check
-        if (file.type !== "application/pdf") {
-
-            if (fileStatus) {
-                fileStatus.textContent = "Please select a PDF file.";
-            }
-
-            uploadPage.value = "";
-            return;
-        }
-
-        // 5MB check
-        if (file.size > MAX_FILE_SIZE) {
-
-            if (fileStatus) {
-                fileStatus.textContent =
-                    "File is too large. Maximum size is 5MB.";
-            }
-
-            uploadPage.value = "";
-            return;
-        }
-
-        if (fileInfo) {
-            fileInfo.textContent =
-                `Selected file: ${file.name}`;
-        }
-
-        if (fileStatus) {
-            fileStatus.textContent =
-                "Resume selected successfully.";
-        }
-
+        element.appendChild(li);
     });
 }
 
+function renderAnalysis(data) {
+    setText("detectedField", data.field, "Not identified");
+    setText("primaryRole", data.primary_role, "Not identified");
+    setText("resumeSummary", data.summary, "No summary available.");
 
-// ===============================
-// Analyze Resume
-// ===============================
+    setText(
+        "atsScore",
+        data.ats_score !== undefined ? `${data.ats_score} / 100` : "0 / 100"
+    );
 
-if (analyzeBtn) {
+    setText(
+        "jobMatch",
+        data.job_match !== undefined ? `${data.job_match}%` : "0%"
+    );
 
-    analyzeBtn.addEventListener("click", async function () {
+    setText(
+        "skillCount",
+        data.skill_count !== undefined ? `${data.skill_count} Skills` : "0 Skills"
+    );
 
-        const fileInput =
-            document.getElementById("resumeFile");
+    setText("pageCount", data.pages !== undefined ? data.pages : "--");
 
-        const file =
-            fileInput ? fileInput.files[0] : null;
+    renderList("skillsList", data.skills, "No skills detected.");
+    renderList(
+        "missingSkillsList",
+        data.missing_skills,
+        "No major missing skills identified."
+    );
 
-        const jobRole =
-            document.getElementById("jobRole");
+    setText(
+        "experienceSummary",
+        data.experience_summary,
+        "No experience summary available."
+    );
 
+    renderList(
+        "recommendedRolesList",
+        data.recommended_roles,
+        "No recommended roles available."
+    );
 
-        // No file
-        if (!file) {
+    renderList(
+        "suggestionsList",
+        data.suggestions,
+        "No suggestions available."
+    );
+}
 
-            if (uploadResult) {
-                uploadResult.textContent =
-                    "Please choose a PDF file first.";
-            }
+async function analyzeResume(file) {
+    if (!file) {
+        alert("Please select a PDF file.");
+        return;
+    }
 
-            return;
-        }
+    const uploadResult = getElement("uploadResult");
+    const analyzeBtn = getElement("analyzeBtn");
 
+    if (uploadResult) {
+        uploadResult.textContent = "Uploading and analyzing...";
+    }
 
-        // PDF validation
-        if (file.type !== "application/pdf") {
-
-            if (uploadResult) {
-                uploadResult.textContent =
-                    "Only PDF files are allowed.";
-            }
-
-            return;
-        }
-
-
-        // 5MB validation
-        if (file.size > MAX_FILE_SIZE) {
-
-            if (uploadResult) {
-                uploadResult.textContent =
-                    "Resume must be smaller than 5MB.";
-            }
-
-            return;
-        }
-
-
-        if (uploadResult) {
-            uploadResult.textContent =
-                `Analyzing ${file.name}...`;
-        }
-
-
+    if (analyzeBtn) {
         analyzeBtn.disabled = true;
-        analyzeBtn.textContent = "Analyzing...";
+    }
 
+    const formData = new FormData();
+    formData.append("resume", file);
 
-        const formData = new FormData();
-
-        formData.append("resume", file);
-
-
-        try {
-
-            const response = await fetch(
-                "https://cvision-ai-eisc.onrender.com/api/upload",
-                {
-                    method: "POST",
-                    body: formData,
-                }
-            );
-
-
-            const data = await response.json();
-
-
-            if (!response.ok) {
-                throw new Error(
-                    data.error || "Upload failed"
-                );
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/api/upload`,
+            {
+                method: "POST",
+                body: formData
             }
+        );
 
+        const data = await response.json();
 
-            // Save analysis
-            localStorage.setItem(
-                "resumeAnalysis",
-                JSON.stringify(data)
+        console.log("Backend response:", data);
+
+        if (!response.ok) {
+            throw new Error(
+                data.error ||
+                data.details ||
+                "Resume analysis failed."
             );
-
-
-            // Save selected job role
-            if (jobRole) {
-
-                localStorage.setItem(
-                    "jobRole",
-                    jobRole.value
-                );
-
-            }
-
-
-            // Go to dashboard
-            window.location.href =
-                "dashboard.html";
-
-
-        } catch (error) {
-
-            console.error(
-                "Resume upload error:",
-                error
-            );
-
-            if (uploadResult) {
-
-                uploadResult.textContent =
-                    error.message ||
-                    "Something went wrong while uploading.";
-
-            }
-
-        } finally {
-
-            analyzeBtn.disabled = false;
-            analyzeBtn.textContent =
-                "Analyze Resume";
-
         }
 
+        localStorage.setItem(
+            "resumeAnalysis",
+            JSON.stringify(data)
+        );
+
+        if (data.primary_role) {
+            localStorage.setItem("jobRole", data.primary_role);
+        }
+
+        renderAnalysis(data);
+        alert("Resume uploaded and analyzed successfully!");
+        document.location.href = "dashboard.html";
+
+    } catch (error) {
+        console.error("Upload error:", error);
+        if (uploadResult) {
+            uploadResult.textContent = "Upload failed. Please try again.";
+        }
+        if (analyzeBtn) {
+            analyzeBtn.disabled = false;
+        }
+        alert(error.message || "Resume analysis failed.");
+    }
+}
+
+function setupUpload() {
+    const fileInput = getElement("resumeFile");
+    const analyzeBtn = getElement("analyzeBtn");
+
+    if (!fileInput) {
+        console.error("resumeFile not found.");
+        return;
+    }
+
+    if (analyzeBtn) {
+        analyzeBtn.addEventListener("click", function () {
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("Please select your resume PDF first.");
+                return;
+            }
+
+            analyzeResume(file);
+        });
+    }
+
+    fileInput.addEventListener("change", function () {
+        const file = this.files[0];
+        const fileStatus = getElement("fileStatus");
+
+        if (!fileStatus) return;
+
+        fileStatus.textContent = file
+            ? `Selected file: ${file.name}`
+            : "No file selected.";
     });
 }
 
+function loadSavedAnalysis() {
+    try {
+        const saved = localStorage.getItem("resumeAnalysis");
 
-// ===============================
-// Dashboard
-// ===============================
+        if (!saved) return;
 
-const dashboardPage =
-    document.getElementById("dashboardRoot");
+        const data = JSON.parse(saved);
+        renderAnalysis(data);
 
-
-function getStoredAnalysis() {
-
-    const direct =
-        localStorage.getItem("resumeAnalysis");
-
-
-    if (direct) {
-
-        try {
-
-            return JSON.parse(direct);
-
-        } catch (error) {
-
-            console.error(
-                "resumeAnalysis parse failed:",
-                error
-            );
-
-        }
-
+    } catch (error) {
+        console.error("Saved analysis error:", error);
     }
-
-
-    return null;
 }
 
-
-if (dashboardPage) {
-
-    async function loadDashboard() {
-
-        let storedAnalysis =
-            getStoredAnalysis();
-
-
-        // If localStorage is empty,
-        // get latest analysis from backend.
-
-        if (!storedAnalysis) {
-
-            try {
-
-                const response = await fetch(
-                    "https://cvision-ai-eisc.onrender.com/api/dashboard"
-                );
-
-                const data =
-                    await response.json();
-
-
-                if (
-                    response.ok &&
-                    data &&
-                    data.status === "success"
-                ) {
-
-                    storedAnalysis = data;
-
-                    localStorage.setItem(
-                        "resumeAnalysis",
-                        JSON.stringify(data)
-                    );
-
-                }
-
-            } catch (error) {
-
-                console.error(
-                    "Dashboard fetch failed:",
-                    error
-                );
-
-            }
-
-        }
-
-
-        const analysis =
-            storedAnalysis || {};
-
-
-        // ===============================
-        // Dashboard Elements
-        // ===============================
-
-        const resumeName =
-            document.getElementById("resumeName");
-
-        const pageCount =
-            document.getElementById("pageCount");
-
-        const skillCount =
-            document.getElementById("skillCount");
-
-        const atsScore =
-            document.getElementById("atsScore");
-
-        const jobMatch =
-            document.getElementById("jobMatch");
-
-        const skillsList =
-            document.getElementById("skillsList");
-
-        const suggestionsList =
-            document.getElementById("suggestionsList");
-
-        const missingSkillsList =
-            document.getElementById("missingSkillsList");
-
-
-        // ===============================
-        // Selected Role
-        // ===============================
-
-        const selectedRole =
-            localStorage.getItem("jobRole") ||
-            "DevOps";
-
-
-        // ===============================
-        // Resume Name
-        // ===============================
-
-        if (resumeName) {
-
-            resumeName.textContent =
-                analysis.filename
-                    ? `Analyzed: ${analysis.filename}`
-                    : "Resume Analysis";
-
-        }
-
-
-        // ===============================
-        // Pages
-        // ===============================
-
-        if (pageCount) {
-
-            pageCount.textContent =
-                analysis.pages
-                    ? String(analysis.pages)
-                    : "--";
-
-        }
-
-
-        // ===============================
-        // Skills
-        // ===============================
-
-        const skills =
-            Array.isArray(analysis.skills)
-                ? analysis.skills
-                : [];
-
-
-        // ===============================
-        // Required Skills by Role
-        // ===============================
-
-        const roleSkills = {
-
-            DevOps: [
-                "Docker",
-                "Kubernetes",
-                "Linux",
-                "Git",
-                "Terraform",
-                "Ansible",
-                "AWS",
-                "Jenkins"
-            ],
-
-            Python: [
-                "Python",
-                "Flask",
-                "Django",
-                "MySQL",
-                "Git"
-            ],
-
-            MERN: [
-                "React",
-                "Node.js",
-                "MongoDB",
-                "Express.js",
-                "JavaScript"
-            ],
-
-            AIML: [
-                "Python",
-                "TensorFlow",
-                "PyTorch",
-                "Machine Learning",
-                "Deep Learning"
-            ]
-
-        };
-
-
-        const requiredSkills =
-            roleSkills[selectedRole] || [];
-
-
-        const missingSkills =
-            requiredSkills.filter(
-                skill => !skills.includes(skill)
-            );
-
-
-        // ===============================
-        // Skill Count
-        // ===============================
-
-        if (skillCount) {
-
-            skillCount.textContent =
-                `${skills.length} Skills`;
-
-        }
-
-
-        // ===============================
-        // ATS Score
-        // ===============================
-
-        if (atsScore) {
-
-            atsScore.textContent =
-                `${analysis.ats_score ?? 0} / 100`;
-
-        }
-
-
-        // ===============================
-        // Job Match
-        // ===============================
-
-        if (jobMatch) {
-
-            jobMatch.textContent =
-                `${analysis.job_match ?? 0}%`;
-
-        }
-
-
-        // ===============================
-        // Skills List
-        // ===============================
-
-        if (skillsList) {
-
-            skillsList.innerHTML = "";
-
-
-            if (skills.length > 0) {
-
-                skills.forEach((skill) => {
-
-                    const li =
-                        document.createElement("li");
-
-                    li.textContent = skill;
-
-                    skillsList.appendChild(li);
-
-                });
-
-            } else {
-
-                const li =
-                    document.createElement("li");
-
-                li.textContent =
-                    "No skills detected.";
-
-                skillsList.appendChild(li);
-
-            }
-
-        }
-
-
-        // ===============================
-        // Missing Skills
-        // ===============================
-
-        if (missingSkillsList) {
-
-            missingSkillsList.innerHTML = "";
-
-
-            if (missingSkills.length > 0) {
-
-                missingSkills.forEach((skill) => {
-
-                    const li =
-                        document.createElement("li");
-
-                    li.textContent = skill;
-
-                    missingSkillsList.appendChild(li);
-
-                });
-
-            } else {
-
-                const li =
-                    document.createElement("li");
-
-                li.textContent =
-                    "No missing skills found.";
-
-                missingSkillsList.appendChild(li);
-
-            }
-
-        }
-
-
-        // ===============================
-        // Suggestions
-        // ===============================
-
-        if (suggestionsList) {
-
-            suggestionsList.innerHTML = "";
-
-
-            const suggestions =
-                Array.isArray(analysis.suggestions) &&
-                analysis.suggestions.length
-                    ? analysis.suggestions
-                    : [
-                        "Upload a resume to begin analysis."
-                    ];
-
-
-            suggestions.forEach((suggestion) => {
-
-                const li =
-                    document.createElement("li");
-
-                li.textContent = suggestion;
-
-                suggestionsList.appendChild(li);
-
-            });
-
-        }
-
-    }
-
-
-    loadDashboard();
-
-}
+document.addEventListener("DOMContentLoaded", function () {
+    setupUpload();
+    loadSavedAnalysis();
+});
